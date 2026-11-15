@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Локально — SQLite (ничего не нужно ставить). Для PostgreSQL: provider = "postgresql" и DATABASE_URL.
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Track {
+  id            String   @id @default(cuid())
+  soundcloudId  String   @unique
+  title         String
+  artist        String
+  artworkUrl    String?
+  soundcloudUrl String
+  durationMs    Int?
+  playable      Boolean  @default(true)
+  metaStatus    String   @default("verified") // verified | unavailable
+  search        String // нормализованные "название исполнитель" для поиска
+  createdAt     DateTime @default(now())
+
+  playlists PlaylistTrack[]
+  dailies   DailyChallenge[]
+  reports   Report[]
+
+  @@index([soundcloudUrl])
+  @@index([createdAt])
+}
+
+model Playlist {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  tokenHash   String
+  createdAt   DateTime @default(now())
+  // Альбом "Артист дня": один на дату (UTC), с аватаркой артиста SoundCloud
+  avatarUrl   String?
+  artistSlug  String?
+  artistDay   String?  @unique
+
+  tracks PlaylistTrack[]
+
+  @@index([createdAt])
+}
+
+model PlaylistTrack {
+  playlistId String
+  trackId    String
+  position   Int
+
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  track    Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@id([playlistId, trackId])
+  @@index([trackId])
+}
+
+model DailyChallenge {
+  date    String @id // YYYY-MM-DD, UTC
+  trackId String
+  track   Track  @relation(fields: [trackId], references: [id], onDelete: Cascade)
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  trackId   String
+  reason    String
+  createdAt DateTime @default(now())
+  track     Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@index([trackId])
+}
