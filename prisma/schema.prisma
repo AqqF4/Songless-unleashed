@@ -5,7 +5,7 @@ generator client {
 // Локально — SQLite (ничего не нужно ставить). Для PostgreSQL: provider = "postgresql" и DATABASE_URL.
 datasource db {
   provider = "postgresql"
-  url      = env("postgresql://neondb_owner:npg_CkxfU52BOoXJ@ep-steep-king-bd97u9ia-pooler.c-8.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require")
+  url      = env("DATABASE_URL")
 }
 
 model Track {
